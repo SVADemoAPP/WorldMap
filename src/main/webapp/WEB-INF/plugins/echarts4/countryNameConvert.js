@@ -98,7 +98,7 @@ var nameMap = {
     'Korea':'韩国',
     'Kosovo':'科索沃',
     'Kuwait':'科威特',
-    "Coate dIvoire":'科特迪瓦',
+    'Coate d\'Ivoire':'科特迪瓦',
     'Lao PDR':'老挝',
     'Lebanon':'黎巴嫩',
     'Liberia':'利比里亚',

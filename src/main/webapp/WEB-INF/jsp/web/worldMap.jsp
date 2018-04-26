@@ -24,17 +24,18 @@
 <style type="text/css">
 body{
     margin: 0;
+    background:#000;
 }
 .main-body{
     background:url(./images/bg.png);
     background-size:100% 100%;
     width:100%;
-    height:1080px;
-    padding-top: 70px;
+    height:800px;
 }
 .mainContent{
     margin: 0px 0 20px 0;
-    height:1080px;
+    height:800px;
+    padding-top: 30px;
 }
 </style>
 
@@ -68,7 +69,11 @@ var ownerMap = {
 		"西欧":"李广俊",
 		"非洲":"孟广元",
 		"中亚":"张三",
-		"俄罗斯":"李四"
+		"俄罗斯":"李四",
+		"东欧":'王五',
+		"东南亚":"赵六",
+		"南太平洋":"孙琦",
+		"南美":"周八"
 };
 var dom = document.getElementById("container");
 var myChart = echarts.init(dom);
@@ -82,12 +87,19 @@ option = {
     legend:{
     	show:true,
     	left:'center',
-    	top:'bottom',
+    	bottom:80,
+    	textStyle:{
+    		color:"white"
+    	},
     	tooltip: {
             show: true,
             formatter:function(params){
             	var str = "owner:";
-            	str += ownerMap[params.name];
+            	if(ownerMap[params.name]){
+            		str += ownerMap[params.name];
+            	}else{
+            		str = params.name;
+            	}
             	return str;
             }
         },
@@ -119,8 +131,11 @@ option = {
     toolbox: {
         show: true,
         orient: 'vertical',
-        left: 'right',
         top: 'center',
+        right: 50,
+        iconStyle:{
+        	color:'white'
+        },
         feature: {
             dataView: {readOnly: false},
             restore: {},
@@ -140,12 +155,16 @@ option = {
             {value: -2, label: '不拓展区', color: 'grey'}
         ],
         itemWidth:20,
-        itemHeight:20,
+        itemHeight:18,
         showLabel:true,
+        textStyle:{
+        	color:'white'
+        },
+        textGap:10,
         itemGap:0,
         itemSymbol:'rect',
-        left:70,
-        bottom:20,
+        left:100,
+        bottom:80,
         text:['High','Low'],
         realtime: false,
         calculable: true,
@@ -163,9 +182,178 @@ option = {
             showLegendSymbol:false,
             roam: false,
             itemStyle:{
-                emphasis:{label:{show:true}}
             },
-            data:dataC
+            emphasis:{
+                label:{
+                    show:true,
+                    color:'black'
+                }
+            },
+            data:dataC,
+            markPoint:{
+            	symbolSize:60,
+            	itemStyle:{
+            		color:'#bc494d',
+            	},
+            	data:[
+            	      {name: '印度', value: 2000, coord:[77,20],symbol:'pin'} // TODO 图片
+            	]
+            	
+            }
+        },
+        {
+            name: '西欧',
+            type: 'map',
+            nameMap:nameMap,
+            mapType: 'world',
+            showLegendSymbol:false,
+            roam: false,
+            itemStyle:{
+            },
+            emphasis:{
+                label:{
+                    show:true,
+                    color:'black'
+                }
+            },
+            data:[
+                {name: '德国', value: 0}
+            ]
+        },
+        {
+            name: '非洲',
+            type: 'map',
+            nameMap:nameMap,
+            mapType: 'world',
+            showLegendSymbol:false,
+            roam: false,
+            itemStyle:{
+            },
+            emphasis:{
+                label:{
+                    show:true,
+                    color:'black'
+                }
+            },
+            data:[
+                {name: '阿尔及利亚', value: 0},
+                {name: '南非', value: 30, suppliers:['CC'], testPO:10, businessPO:10, onNetPO:10}
+            ]
+        },
+        {
+            name: '中亚',
+            type: 'map',
+            nameMap:nameMap,
+            mapType: 'world',
+            showLegendSymbol:false,
+            roam: false,
+            itemStyle:{
+            },
+            emphasis:{
+                label:{
+                    show:true,
+                    color:'black'
+                }
+            },
+            data:[
+                {name: '塔吉克斯坦', value: 30, suppliers:['CC'], testPO:10, businessPO:10, onNetPO:10},
+                {name: '吉尔吉斯斯坦', value: 800, suppliers:['VDF'], testPO:100, businessPO:300, onNetPO:300}
+            ]
+        },
+        {
+            name: '俄罗斯',
+            type: 'map',
+            nameMap:nameMap,
+            mapType: 'world',
+            showLegendSymbol:false,
+            roam: false,
+            itemStyle:{
+            },
+            emphasis:{
+                label:{
+                    show:true,
+                    color:'black'
+                }
+            },
+            data:[
+                {name: '俄罗斯', value: 300, suppliers:['CC'], testPO:100, businessPO:100, onNetPO:100}
+            ]
+        },
+        {
+            name: '东欧',
+            type: 'map',
+            nameMap:nameMap,
+            mapType: 'world',
+            showLegendSymbol:false,
+            roam: false,
+            itemStyle:{
+            },
+            emphasis:{
+                label:{
+                    show:true,
+                    color:'black'
+                }
+            },
+            data:[
+                {name: '波兰', value: 300, suppliers:['CC'], testPO:100, businessPO:100, onNetPO:100}
+            ]
+        },
+        {
+            name: '东南亚',
+            type: 'map',
+            nameMap:nameMap,
+            mapType: 'world',
+            showLegendSymbol:false,
+            roam: false,
+            itemStyle:{
+            },
+            emphasis:{
+                label:{
+                    show:true,
+                    color:'black'
+                }
+            },
+            data:[
+                {name: '泰国', value: 30, suppliers:['CC'], testPO:10, businessPO:10, onNetPO:10}
+            ]
+        },
+        {
+            name: '南太平洋',
+            type: 'map',
+            nameMap:nameMap,
+            mapType: 'world',
+            showLegendSymbol:false,
+            roam: false,
+            itemStyle:{
+            },
+            emphasis:{
+                label:{
+                    show:true,
+                    color:'black'
+                }
+            },
+            data:[
+                {name: '澳大利亚', value: 1600, suppliers:['VDF','TEL','CC'], testPO:300, businessPO:600, onNetPO:600}
+            ]
+        },
+        {
+            name: '南美',
+            type: 'map',
+            nameMap:nameMap,
+            mapType: 'world',
+            showLegendSymbol:false,
+            roam: false,
+            itemStyle:{
+            },
+            emphasis:{
+                label:{
+                    show:true,
+                    color:'black'
+                }
+            },
+            data:[
+                {name: '巴西', value: 1200, suppliers:['VDF','CC'], testPO:200, businessPO:500, onNetPO:500}
+            ]
         }
     ]
 };
