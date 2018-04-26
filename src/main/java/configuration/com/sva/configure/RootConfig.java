@@ -19,7 +19,6 @@ import org.springframework.context.annotation.Import;
  *  
  */
 @Configuration
-@Import(DataAccessConfig.class)
 public class RootConfig
 {
 
