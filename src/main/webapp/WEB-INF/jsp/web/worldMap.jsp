@@ -30,12 +30,13 @@ body{
     background:url(./images/bg.png);
     background-size:100% 100%;
     width:100%;
-    height:800px;
+    height:1080px;
 }
 .mainContent{
-    margin: 0px 0 20px 0;
-    height:800px;
-    padding-top: 30px;
+    margin: 0px 0 0px 0;
+    height:960px;
+    padding-top: 60px;
+    padding-bottom:60px;
 }
 </style>
 
@@ -62,22 +63,13 @@ body{
 	<script src="<c:url value='/plugins/echarts4/world.js'/>" type="text/javascript"></script>
 	<script src="<c:url value='/plugins/echarts4/data.js'/>" type="text/javascript"></script>
 	<script src="<c:url value='/plugins/echarts4/countryNameConvert.js'/>" type="text/javascript"></script>
+	<script src="<c:url value='/plugins/echarts4/coordMap.js'/>" type="text/javascript"></script>
 	<!-- END PAGE LEVEL SCRIPTS -->
 
 	<script type="text/javascript">
-var ownerMap = {
-		"西欧":"李广俊",
-		"非洲":"孟广元",
-		"中亚":"张三",
-		"俄罗斯":"李四",
-		"东欧":'王五',
-		"东南亚":"赵六",
-		"南太平洋":"孙琦",
-		"南美":"周八"
-};
 var dom = document.getElementById("container");
 var myChart = echarts.init(dom);
-var app = {};
+var groupArea = {};
 option = null;
 option = {
     title: {
@@ -87,16 +79,18 @@ option = {
     legend:{
     	show:true,
     	left:'center',
-    	bottom:80,
+    	bottom:30,
     	textStyle:{
     		color:"white"
     	},
     	tooltip: {
             show: true,
             formatter:function(params){
-            	var str = "owner:";
-            	if(ownerMap[params.name]){
-            		str += ownerMap[params.name];
+            	var str = "";
+            	var detail = groupArea[params.name];
+            	if(detail){
+            		str += "HQ局长:" + detail[0].officer;
+            		//str += "主管：" + detail[0].mainer;
             	}else{
             		str = params.name;
             	}
@@ -110,21 +104,21 @@ option = {
         formatter: function (params) {
             var str = "";
             
-            if(params.value == -2){
-                return "不在此国家进行拓展";
-            }else if(params.value == -1){
-            	return "国家：" + params.name + "无拓展意愿";
-            }else if(params.value == 0){
+            if(params.value == 0){
             	return "国家：" + params.name + "有拓展意愿";
+            }else if(params.value == -1){
+            	if(params.isForbiden == "Y"){
+            		return "不在此国家进行拓展";
+            	}else{
+            		return "国家：" + params.name + "无拓展意愿";
+            	}
             }
             
             var data = params.data;
             str += "国家：" + params.name;
             str += "<br/>供应商个数：" + data.suppliers.length;
             str += "<br/>供应商名称：<br/>" + data.suppliers;
-            str += "<br/>测试PO个数：" + data.testPO;
-            str += "<br/>商用PO个数：" + data.businessPO;
-            str += "<br/>上线PO个数：" + data.onNetPO;
+            str += "<br/>PO个数：" + data.value;
             return str;
         }
     },
@@ -145,17 +139,13 @@ option = {
     visualMap: {
         type:"piecewise",
         pieces: [
-            {gt: 1500},
-            {gt: 1000, lte: 1500},
-            {gt: 500, lte: 1000},
-            {gt: 50, lte: 500},
-            {gt: 0, lte: 50},
+            {gt: 100},
+            {gt: 0, lte: 100},
             {value: 0, label: '0，有拓展意愿区'},
-            {value: -1, label: '0，无拓展意愿区'},
-            {value: -2, label: '不拓展区', color: 'grey'}
+            {value: -1, label: '不拓展区及无意愿区', color: 'grey'}
         ],
-        itemWidth:20,
-        itemHeight:18,
+        itemWidth:30,
+        itemHeight:30,
         showLabel:true,
         textStyle:{
         	color:'white'
@@ -163,8 +153,8 @@ option = {
         textGap:10,
         itemGap:0,
         itemSymbol:'rect',
-        left:100,
-        bottom:80,
+        left:130,
+        bottom:30,
         text:['High','Low'],
         realtime: false,
         calculable: true,
@@ -173,194 +163,131 @@ option = {
             symbol:'rect'
         }
     },
-    series: [
-        {
-            name: '总览',
-            type: 'map',
-            nameMap:nameMap,
-            mapType: 'world',
-            showLegendSymbol:false,
-            roam: false,
-            itemStyle:{
-            },
-            emphasis:{
-                label:{
-                    show:true,
-                    color:'black'
-                }
-            },
-            data:dataC,
-            markPoint:{
-            	symbolSize:60,
-            	itemStyle:{
-            		color:'#bc494d',
-            	},
-            	data:[
-            	      {name: '印度', value: 2000, coord:[77,20],symbol:'pin'} // TODO 图片
-            	]
-            	
+    series: []
+};
+$(document).ready(function() {
+	$.post("/wm/getData",null,function(data){
+	    if(data.data){
+	    	makeSeries(data.data);
+	    }
+	    
+        myChart.setOption(option, true);
+	});
+});
+
+function makeSeries(datas){
+	var countryList = groupByCountry(datas);
+	var highestCountry = findHighest(countryList);
+	groupArea = groupByArea(countryList);
+	var fullCountry = fillCountry(countryList);
+	var s1 = {
+        name: '总览',
+        type: 'map',
+        nameMap:nameMap,
+        mapType: 'world',
+        showLegendSymbol:false,
+        roam: false,
+        itemStyle:{
+        	areaColor:'grey'
+        },
+        emphasis:{
+            label:{
+                show:true,
+                color:'black'
             }
         },
-        {
-            name: '西欧',
-            type: 'map',
-            nameMap:nameMap,
-            mapType: 'world',
-            showLegendSymbol:false,
-            roam: false,
+        data:fullCountry,
+        markPoint:{
+            symbolSize:60,
             itemStyle:{
+                color:'#bc494d',
             },
-            emphasis:{
-                label:{
-                    show:true,
-                    color:'black'
-                }
-            },
-            data:[
-                {name: '德国', value: 0}
-            ]
-        },
-        {
-            name: '非洲',
-            type: 'map',
-            nameMap:nameMap,
-            mapType: 'world',
-            showLegendSymbol:false,
-            roam: false,
-            itemStyle:{
-            },
-            emphasis:{
-                label:{
-                    show:true,
-                    color:'black'
-                }
-            },
-            data:[
-                {name: '阿尔及利亚', value: 0},
-                {name: '南非', value: 30, suppliers:['CC'], testPO:10, businessPO:10, onNetPO:10}
-            ]
-        },
-        {
-            name: '中亚',
-            type: 'map',
-            nameMap:nameMap,
-            mapType: 'world',
-            showLegendSymbol:false,
-            roam: false,
-            itemStyle:{
-            },
-            emphasis:{
-                label:{
-                    show:true,
-                    color:'black'
-                }
-            },
-            data:[
-                {name: '塔吉克斯坦', value: 30, suppliers:['CC'], testPO:10, businessPO:10, onNetPO:10},
-                {name: '吉尔吉斯斯坦', value: 800, suppliers:['VDF'], testPO:100, businessPO:300, onNetPO:300}
-            ]
-        },
-        {
-            name: '俄罗斯',
-            type: 'map',
-            nameMap:nameMap,
-            mapType: 'world',
-            showLegendSymbol:false,
-            roam: false,
-            itemStyle:{
-            },
-            emphasis:{
-                label:{
-                    show:true,
-                    color:'black'
-                }
-            },
-            data:[
-                {name: '俄罗斯', value: 300, suppliers:['CC'], testPO:100, businessPO:100, onNetPO:100}
-            ]
-        },
-        {
-            name: '东欧',
-            type: 'map',
-            nameMap:nameMap,
-            mapType: 'world',
-            showLegendSymbol:false,
-            roam: false,
-            itemStyle:{
-            },
-            emphasis:{
-                label:{
-                    show:true,
-                    color:'black'
-                }
-            },
-            data:[
-                {name: '波兰', value: 300, suppliers:['CC'], testPO:100, businessPO:100, onNetPO:100}
-            ]
-        },
-        {
-            name: '东南亚',
-            type: 'map',
-            nameMap:nameMap,
-            mapType: 'world',
-            showLegendSymbol:false,
-            roam: false,
-            itemStyle:{
-            },
-            emphasis:{
-                label:{
-                    show:true,
-                    color:'black'
-                }
-            },
-            data:[
-                {name: '泰国', value: 30, suppliers:['CC'], testPO:10, businessPO:10, onNetPO:10}
-            ]
-        },
-        {
-            name: '南太平洋',
-            type: 'map',
-            nameMap:nameMap,
-            mapType: 'world',
-            showLegendSymbol:false,
-            roam: false,
-            itemStyle:{
-            },
-            emphasis:{
-                label:{
-                    show:true,
-                    color:'black'
-                }
-            },
-            data:[
-                {name: '澳大利亚', value: 1600, suppliers:['VDF','TEL','CC'], testPO:300, businessPO:600, onNetPO:600}
-            ]
-        },
-        {
-            name: '南美',
-            type: 'map',
-            nameMap:nameMap,
-            mapType: 'world',
-            showLegendSymbol:false,
-            roam: false,
-            itemStyle:{
-            },
-            emphasis:{
-                label:{
-                    show:true,
-                    color:'black'
-                }
-            },
-            data:[
-                {name: '巴西', value: 1200, suppliers:['VDF','CC'], testPO:200, businessPO:500, onNetPO:500}
-            ]
+            data:[highestCountry]
         }
-    ]
-};
-;
-if (option && typeof option === "object") {
-    myChart.setOption(option, true);
+    };
+    option.series.push(s1);
+    
+    for(var i in groupArea){
+    	var si = {
+            name: i,
+            type: 'map',
+            nameMap:nameMap,
+            mapType: 'world',
+            showLegendSymbol:false,
+            roam: false,
+            itemStyle:{
+            },
+            emphasis:{
+                label:{
+                    show:true,
+                    color:'black'
+                }
+            },
+            data:groupArea[i]
+        };
+    	option.series.push(si);
+    }
 }
+
+function groupByCountry(data){
+	var list = []
+	var group = _.groupBy(data, '国家');
+	for(var i in group){
+		var gTemp = group[i];
+		var temp = {};
+		for(var j in gTemp){
+			if(temp['name']){
+				temp['value'] = temp['value'] + parseInt(gTemp[j]['PO数']);
+                temp['suppliers'].push(gTemp[j]['运营商']);
+			}else{
+				temp['area'] = gTemp[j]['片区'];
+				temp['name'] = gTemp[j]['国家'];
+				temp['officer'] = gTemp[j]['HQ局长'];
+				temp['mainer'] = gTemp[j]['区域主管'];
+				temp['isForbiden'] = gTemp[j]['不拓展及无意愿区域'];
+				temp['isTend'] = gTemp[j]['意愿局点'];
+				temp['value'] = parseInt(gTemp[j]['PO数']);
+				temp['suppliers'] = [gTemp[j]['运营商']];
+			}
+		}
+		list.push(temp);
+	}
+	return list;
+}
+
+function findHighest(datas){
+	var temp = _.max(datas, function(data){ return parseInt(data.value); });
+	temp.coord = coordConvert[temp.name];
+	temp.symbol = 'image://./images/d.png';
+	temp.symbolOffset = [0,'-50%'];
+    return temp;
+}
+
+
+function fillCountry(datas){
+	var newlist = [];
+	var obj = coordConvert;
+	for(var i in coordConvert){
+		var flag = true;
+		for(var j in datas){
+			var tempj = datas[j];
+			if(tempj.name == i){
+				flag = false;
+				break;
+			}
+		}
+		if(flag){
+			newlist.push({'name':i, value:-1, 'isTend':'N'});
+		}
+	}
+	return newlist.concat(datas);
+}
+
+function groupByArea(datas){
+	var group = _.groupBy(datas, 'area');
+    return group;
+}
+
        </script>
 	<!-- END JAVASCRIPTS -->
 </body>

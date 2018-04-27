@@ -1,8 +1,15 @@
 package com.sva.web.controllers;
 
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.InputStream;
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import javax.servlet.http.HttpServletRequest;
+import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
@@ -28,11 +35,6 @@ import com.sva.web.models.HeatmapModel;
 @RequestMapping(value = "")
 public class HomeController
 {
-    /** 
-     * @Fields servic : 热力图服务 
-     */ 
-    private ExcelService service;
-    
     private static final Logger LOG = Logger.getLogger(HomeController.class);
     
     /** 
@@ -46,6 +48,30 @@ public class HomeController
     public String showHeatmap(HeatmapModel requestModel, Model model){
         
         return "web/worldMap";
+    }
+    
+    @RequestMapping(value="/getData", method= {RequestMethod.POST})
+    @ResponseBody
+    public Map<String, Object> getData(HttpServletRequest request, String filename){
+        if(StringUtils.isEmpty(filename)){
+            filename = "data.xlsx";
+        }
+        Map<String, Object> result = new HashMap<String, Object>();
+        // 文件路径
+        String filedir = request.getSession().getServletContext()
+                .getRealPath("/WEB-INF/file");
+        // 对读取Excel表格内容测试
+        List<Map<String,String>> content = new ArrayList<Map<String,String>>();
+        try{
+            InputStream is = new FileInputStream(new File(filedir, filename));
+            ExcelService<String> es = new ExcelService<String>();
+            content = es.readExcelContent(is);
+        }catch(Exception e){
+            result.put("error", e);
+            return result;
+        }
+        result.put("data", content);
+        return result;
     }
 
     /** 

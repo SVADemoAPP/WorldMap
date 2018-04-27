@@ -29,6 +29,10 @@ import org.apache.poi.hssf.usermodel.HSSFSheet;
 import org.apache.poi.hssf.usermodel.HSSFWorkbook;  
 import org.apache.poi.hssf.util.HSSFColor;
 import org.apache.poi.poifs.filesystem.POIFSFileSystem;
+import org.apache.poi.ss.usermodel.DataFormatter;
+import org.apache.poi.xssf.usermodel.XSSFRow;
+import org.apache.poi.xssf.usermodel.XSSFSheet;
+import org.apache.poi.xssf.usermodel.XSSFWorkbook;
   
 /** 
  *  
@@ -230,25 +234,24 @@ public class ExcelService<T>
         // 结果
         List<Map<String, String>> result = new ArrayList<Map<String, String>>();
         
-        POIFSFileSystem fs;
-        HSSFWorkbook wb;
+        XSSFWorkbook wb;
         try {
-            fs = new POIFSFileSystem(is);
-            wb = new HSSFWorkbook(fs);
-            HSSFSheet sheet = wb.getSheetAt(0);
+            wb = new XSSFWorkbook(is);
+            XSSFSheet sheet = wb.getSheetAt(0);
             // 得到总行数
             int rowNum = sheet.getLastRowNum();
-            HSSFRow rowHeader = sheet.getRow(0);
+            XSSFRow rowHeader = sheet.getRow(0);
             // 得到总列数
             int colNum = rowHeader.getPhysicalNumberOfCells();
+            DataFormatter formatter = new DataFormatter();
             
             // 正文内容应该从第二行开始,第一行为表头的标题
             for (int i = 1; i <= rowNum; i++) {
                 Map<String, String> content = new HashMap<String, String>();
-                HSSFRow row = sheet.getRow(i);
+                XSSFRow row = sheet.getRow(i);
                 int j = 0;
                 while (j < colNum) {
-                    content.put(rowHeader.getCell(j).getStringCellValue(), row.getCell(j).getStringCellValue());
+                    content.put(rowHeader.getCell(j).getStringCellValue(), formatter.formatCellValue(row.getCell(j)));
                     j++;
                 }
                 result.add(content);
