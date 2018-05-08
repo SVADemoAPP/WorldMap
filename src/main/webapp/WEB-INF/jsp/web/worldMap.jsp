@@ -38,6 +38,14 @@ body{
     padding-top: 60px;
     padding-bottom:60px;
 }
+.chart{
+    width:300px;
+    height:200px;
+    position:absolute;
+    left:20px;
+    bottom:20px;
+    border:1px solid black;
+}
 </style>
 
 <link rel="shortcut icon" href="favicon.ico" />
@@ -51,6 +59,7 @@ body{
 		<!-- BEGIN PAGE -->
 		<div class="mainContent">
 			<div id="container" style="height:100%;"></div>
+            <div id="chart" class="chart"></div>
 		</div>
 		<!-- END PAGE -->
 	</div>
@@ -86,15 +95,23 @@ option = {
     	tooltip: {
             show: true,
             formatter:function(params){
-            	var str = "";
-            	var detail = groupArea[params.name];
-            	if(detail){
-            		str += "HQ局长:" + detail[0].officer;
-            		//str += "主管：" + detail[0].mainer;
-            	}else{
-            		str = params.name;
-            	}
-            	return str;
+                var str = "";
+                var detail = groupArea[params.name];
+                if(detail){
+                    var total = 0;
+                    for(var i in detail){
+                        total += detail[i].value;
+                    }
+                    var suplist = _.pluck(detail, "suppliers");
+                    var supuniq = _.uniq(_.flatten(suplist))
+                    str += "HQ局长:" + detail[0].officer;
+                    str += "<br/>主管：" + detail[0].mainer;
+                    str += "<br/>PO总数：" + total;
+                    str += "<br/>运营商总数：" + supuniq.length;
+                }else{
+                    str = params.name;
+                }
+                return str;
             }
         },
         selectedMode:'single',
@@ -103,19 +120,19 @@ option = {
         trigger: 'item',
         formatter: function (params) {
             var str = "";
-            
-            if(params.value == 0){
-            	return "国家：" + params.name + "有拓展意愿";
-            }else if(params.value == -1){
-            	if(params.isForbiden == "Y"){
-            		return "不在此国家进行拓展";
-            	}else{
-            		return "国家：" + params.name + "无拓展意愿";
-            	}
-            }
-            
             var data = params.data;
-            str += "国家：" + params.name;
+           
+            if(params.value == 0){
+                return "国家：" + data.area + "/" + params.name + "<br/>拓展中";
+            }else if(params.value == -1){
+                if(params.isForbiden == "Y"){
+                    return "不在此国家进行拓展";
+                }else{
+                    return "国家：" + params.name + "无拓展意愿";
+                }
+            }
+           
+            str += "国家：" + data.area + "/" + params.name;
             str += "<br/>供应商个数：" + data.suppliers.length;
             str += "<br/>供应商名称：<br/>" + data.suppliers;
             str += "<br/>PO个数：" + data.value;
@@ -172,6 +189,7 @@ $(document).ready(function() {
 	    }
 	    
         myChart.setOption(option, true);
+        makeNewChart(data.data);
 	});
 });
 
@@ -239,6 +257,11 @@ function groupByCountry(data){
 			if(temp['name']){
 				temp['value'] = temp['value'] + parseInt(gTemp[j]['PO数']);
                 temp['suppliers'].push(gTemp[j]['运营商']);
+                temp['jan'] = temp['jan'] + parseInt(gTemp[j]['一月']);
+                temp['feb'] = temp['feb'] + parseInt(gTemp[j]['二月']);
+                temp['mar'] = temp['mar'] + parseInt(gTemp[j]['三月']);
+                temp['apr'] = temp['apr'] + parseInt(gTemp[j]['四月']);
+                temp['may'] = temp['may'] + parseInt(gTemp[j]['五月']);
 			}else{
 				temp['area'] = gTemp[j]['片区'];
 				temp['name'] = gTemp[j]['国家'];
@@ -248,6 +271,11 @@ function groupByCountry(data){
 				temp['isTend'] = gTemp[j]['意愿局点'];
 				temp['value'] = parseInt(gTemp[j]['PO数']);
 				temp['suppliers'] = [gTemp[j]['运营商']];
+				temp['jan'] = parseInt(gTemp[j]['一月']);
+                temp['feb'] = parseInt(gTemp[j]['二月']);
+                temp['mar'] = parseInt(gTemp[j]['三月']);
+                temp['apr'] = parseInt(gTemp[j]['四月']);
+                temp['may'] = parseInt(gTemp[j]['五月']);
 			}
 		}
 		list.push(temp);
@@ -286,6 +314,83 @@ function fillCountry(datas){
 function groupByArea(datas){
 	var group = _.groupBy(datas, 'area');
     return group;
+}
+
+function makeNewChart(data){
+	var list = []
+	// 获取各个区域各个月份的PO数
+	for(var i in groupArea){
+		var temp = {};
+		temp["name"] = i;
+		var detail = groupArea[i];
+		var total = 0,
+		    totalJan = 0,
+		    totalFeb = 0,
+		    totalMar = 0,
+		    totalApr = 0,
+		    totalMay = 0;
+        for(var i in detail){
+            total += detail[i].value;
+            totalJan += detail[i].jan;
+            totalFeb += detail[i].feb;
+            totalMar += detail[i].mar;
+            totalApr += detail[i].apr;
+            totalMay += detail[i].may;
+        }
+        temp["po"] = total;
+        temp["poJan"] = totalJan;
+        temp["poFeb"] = totalFeb;
+        temp["poMar"] = totalMar;
+        temp["poApr"] = totalApr;
+        temp["poMay"] = totalMay;
+        list.push(temp);
+	}
+	
+	var xAxisList = ["一月","二月","三月","四月","五月"];
+	
+	var dataList = [];
+	for(var j = 0; j<list.length; j++){
+		var t = {type:'line',stack: '总量'};
+		t["name"] = list[j].name;
+		t["data"] = [list[j].poJan,list[j].poFeb,list[j].poMar,list[j].poApr,list[j].poMay];
+		dataList.push(t);
+	}
+	
+	var dom = document.getElementById("chart");
+	var chart2 = echarts.init(dom);
+	var option = {
+	    title: {
+	        show: false
+	    },
+	    backgroundColor:"#062c3e",
+	    tooltip: {
+	        trigger: 'axis'
+	    },
+	    legend: {
+	        show:true
+	    },
+	    grid: {
+	        left: '3%',
+	        right: '4%',
+	        bottom: '3%',
+	        containLabel: true
+	    },
+	    toolbox: {
+	        feature: {
+	            saveAsImage: {}
+	        }
+	    },
+	    xAxis: {
+	        type: 'category',
+	        boundaryGap: false,
+	        data: xAxisList
+	    },
+	    yAxis: {
+	        type: 'value'
+	    },
+	    series: dataList
+	};
+	chart2.setOption(option, true);
 }
 
        </script>
