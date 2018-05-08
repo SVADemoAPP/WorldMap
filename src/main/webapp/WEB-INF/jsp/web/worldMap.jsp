@@ -29,22 +29,28 @@ body{
 .main-body{
     background:url(./images/bg.png);
     background-size:100% 100%;
-    width:100%;
-    height:1080px;
+    width:1680px;
+    height:1050px;
 }
 .mainContent{
     margin: 0px 0 0px 0;
-    height:960px;
-    padding-top: 60px;
+    height:940px;
+    padding-top: 50px;
     padding-bottom:60px;
 }
 .chart{
-    width:300px;
-    height:200px;
+    width:330px;
+    height:220px;
     position:absolute;
-    left:20px;
-    bottom:20px;
-    border:1px solid black;
+    left:60px;
+    top:470px;
+    border-color:#00edff;
+    border-left-width:6px;
+    border-top-width:8px;
+    border-right-width:3px;
+    border-bottom-width:8px;
+    border-style: solid;
+    box-shadow: 3px 3px 3px rgba(0,0,0,0.4);
 }
 </style>
 
@@ -350,9 +356,15 @@ function makeNewChart(data){
 	
 	var dataList = [];
 	for(var j = 0; j<list.length; j++){
-		var t = {type:'line',stack: '总量'};
+		var t = {type:'line'};
 		t["name"] = list[j].name;
-		t["data"] = [list[j].poJan,list[j].poFeb,list[j].poMar,list[j].poApr,list[j].poMay];
+		t["data"] = [
+		             list[j].poJan,
+		             list[j].poJan+list[j].poFeb,
+		             list[j].poJan+list[j].poFeb+list[j].poMar,
+		             list[j].poJan+list[j].poFeb+list[j].poMar+list[j].poApr,
+		             list[j].poJan+list[j].poFeb+list[j].poMar+list[j].poApr+list[j].poMay
+		             ];
 		dataList.push(t);
 	}
 	
@@ -362,23 +374,24 @@ function makeNewChart(data){
 	    title: {
 	        show: false
 	    },
+	    textStyle:{
+	    	color:"#fff"
+	    },
 	    backgroundColor:"#062c3e",
 	    tooltip: {
 	        trigger: 'axis'
 	    },
 	    legend: {
-	        show:true
+	        show:true,
+	        textStyle:{
+	        	color:"white"
+	        }
 	    },
 	    grid: {
 	        left: '3%',
 	        right: '4%',
 	        bottom: '3%',
 	        containLabel: true
-	    },
-	    toolbox: {
-	        feature: {
-	            saveAsImage: {}
-	        }
 	    },
 	    xAxis: {
 	        type: 'category',
