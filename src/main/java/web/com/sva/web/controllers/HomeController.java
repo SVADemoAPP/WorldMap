@@ -45,6 +45,12 @@ public class HomeController
         return "web/worldMap";
     }
     
+    @RequestMapping(value="/home2", method={RequestMethod.GET})
+    public String showHeatmap2(HeatmapModel requestModel, Model model){
+        
+        return "web/worldMap2";
+    }
+    
     @RequestMapping(value="/getData", method= {RequestMethod.POST})
     @ResponseBody
     public Map<String, Object> getData(HttpServletRequest request, String filename){
