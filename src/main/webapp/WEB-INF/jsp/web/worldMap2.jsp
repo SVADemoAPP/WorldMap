@@ -121,30 +121,18 @@ option = {
                 return str;
             }*/
         },
-        selectedMode:'multiple',
+        selectedMode:'single',
     },
     tooltip: {
-        trigger: 'item',/*
+        trigger: 'item',
         formatter: function (params) {
             var str = "";
             var data = params.data;
            
-            if(params.value == 0){
-                return "国家：" + data.area + "/" + params.name + "<br/>拓展中";
-            }else if(params.value == -1){
-                if(params.isForbiden == "Y"){
-                    return "不在此国家进行拓展";
-                }else{
-                    return "国家：" + params.name + "无拓展意愿";
-                }
-            }
-           
-            str += "国家：" + data.area + "/" + params.name;
-            str += "<br/>供应商个数：" + data.suppliers.length;
-            str += "<br/>供应商名称：<br/>" + data.suppliers;
-            str += "<br/>PO个数：" + data.value;
+            str += "区域：" + data.area;
+            str += "<br/>目标达成率：" + data.value*100+"%";
             return str;
-        }*/
+        }
     },
     toolbox: {
         show: true,
@@ -161,12 +149,33 @@ option = {
         }
     },
     visualMap: {
+        min: 0,
+        max: 1,
+        text:['High','Low'],
+        precision:2,
+        left:130,
+        bottom:30,
+        realtime: false,
+        calculable: true,
+        textStyle:{
+            color:'white'
+        },
+        formatter: function (value) {
+            return value*100 + "%"; // 范围标签显示内容。
+        },
+        inRange: {
+            color: ['lightskyblue','yellow', 'orangered']
+        }
+    },
+    /*
+    visualMap: {
         type:"piecewise",
         pieces: [
-            {gt: 100},
-            {gt: 0, lte: 100},
-            {value: 0, label: '0，有拓展意愿区'},
-            {value: -1, label: '不拓展区及无意愿区', color: 'grey'}
+            {gt: 0.6},
+            {gt: 0.3, lte: 0.6},
+            {gt: 0, lte: 0.3},
+            //{value: 0, label: '0，有拓展意愿区'},
+            //{value: -1, label: '不拓展区及无意愿区', color: 'grey'}
         ],
         itemWidth:30,
         itemHeight:30,
@@ -186,7 +195,7 @@ option = {
             color: ['#48596d','#105fe8','#61adff','#66ffaf','#ffb666','#ff5f5f'],
             symbol:'rect'
         }
-    },
+    },*/
     series: []
 };
 $(document).ready(function() {
@@ -205,34 +214,7 @@ function makeSeries(datas){
 	//var highestCountry = findHighest(countryList);
 	groupArea = groupByArea(countryList);
 	var fullCountry = fillCountry(countryList);
-	/*
-	var s1 = {
-        name: '总览',
-        type: 'map',
-        nameMap:nameMap,
-        mapType: 'world',
-        showLegendSymbol:false,
-        roam: false,
-        itemStyle:{
-        	areaColor:'grey'
-        },
-        emphasis:{
-            label:{
-                show:true,
-                color:'black'
-            }
-        },
-        data:fullCountry,
-        markPoint:{
-            symbolSize:60,
-            itemStyle:{
-                color:'#bc494d',
-            },
-            data:[highestCountry]
-        }
-    };
-    option.series.push(s1);
-    */
+	
     var count = 0;
     for(var i in groupArea){
     	var dataOld = groupArea[i];
@@ -244,7 +226,7 @@ function makeSeries(datas){
     	}
     	for(var k in dataOld){
     		dataOld[k].po = dataOld[k].value;
-    		dataOld[k].value = totalPo / totalExpect;
+    		dataOld[k].value = (totalPo / totalExpect).toFixed(4);
         }
     	var si = {
             name: i,
@@ -258,8 +240,12 @@ function makeSeries(datas){
             },
             tooltip:{
             	formatter:function(params){
-            		console.log(params);
-            		return "ok";
+            		var str = "";
+                    var data = params.data;
+                   
+                    str += "区域：" + data.area;
+                    str += "<br/>目标达成率：" + data.value*100+"%";
+                    return str;
             	}
             },
             emphasis:{
@@ -273,6 +259,26 @@ function makeSeries(datas){
     	option.series.push(si);
     	count++;
     }
+    // 总览
+    var newList = _.flatten(_.values(groupArea),true);
+    
+    var s1 = {
+        name: '总览',
+        type: 'map',
+        nameMap:nameMap,
+        mapType: 'world',
+        showLegendSymbol:false,
+        roam: false,
+        emphasis:{
+            label:{
+                show:true,
+                color:'black'
+            }
+        },
+        data:newList
+    };
+    option.series.unshift(s1);
+    
 }
 
 function groupByCountry(data){
